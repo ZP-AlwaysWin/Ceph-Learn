@@ -1,0 +1,135 @@
+1.打tag
+	docker tag fastdfs/nginx h3crd-wlan1.chinacloudapp.cn:5000/fastdfs_nginx:v1
+
+2.push到私有仓库
+	docker push h3crd-wlan1.chinacloudapp.cn:5000/fastdfs_nginx:v1
+
+3.K8S给node打标签
+
+显示出node标签：
+	kubectl get nodes --show-labels
+给指定node打标签：
+	kubectl label node 172.20.0.95 aa=bb
+删除指定label
+	kubectl label node 172.20.0.97 fastdfs-
+
+4.K8S的FLANNEL配置修改
+
+ 1) vim /etc/sysconfig/flanneld
+ 2)  systemctl restart flanneld docker kubelet
+ 
+5.动态缩小副本数
+kubectl scale sts fastdfs-storage --replicas=1
+
+6.如何在docker容器和宿主机之间复制文件
+
+﻿从主机复制到容器 docker cp host_path containerID:container_path
+
+从容器复制到主机 docker cp containerID:container_path host_path
+
+
+7.nginx指定配置文件启动nginx
+
+/usr/local/nginx/sbin/nginx -c /etc/fdfs/nginx.conf
+
+8.使用正在运行的容器制作镜像
+
+docker commit -m “Added nginx from ubuntu14.04” -a “saymagic” 79c761f627f3 saymagic/ubuntu-nginx:v1
+其中，-m参数用来来指定提交的说明信息；-a可以指定用户信息的；79c761f627f3代表的时容器的id；saymagic/ubuntu-nginx:v1指定目标镜像的用户名、仓库名和 tag 信息。创建成功后会返回这个镜像的 ID 信息
+
+
+9.K8S集群挂载配置文件
+kubectl create configmap fdfs-config --from-file=fdfs/
+查看挂载的情况
+kubectl get configmap fdfs-config -o json
+
+10.K8S pod节点动态缩节点
+kubectl scale sts fastdfs-storage  --replicas=1
+
+11.删除K8S etcd中的数据
+
+export ETCDCTL_API=3
+etcdctl del /registry/statefulsets/default/fastdfs-group0-storage0
+etcdctl del /registry/statefulsets/default/fastdfs-group1-storage0
+
+12.
+查看Linux Cpu的命令
+
+cat /proc/cpuinfo |grep "physical id"|sort|uniq|wc -l
+
+cat /proc/cpuinfo |grep "core id"|sort|uniq|wc -l
+
+cat /proc/cpuinfo |grep "processor"|sort|uniq|wc -l
+
+13.把镜像打成tar包
+docker save h3crd-wlan1.chinacloudapp.cn:5000/fastdfs_nginx -o fastdfs_nginx.tar
+
+14. deployment在线更新镜像
+
+kubectl set image deployment/oasis-rest-user  oasis-rest-user=h3crd-wlan1.chinacloudapp.cn:5000/buildonly/oasis-rest-user:20180423164633 --namespace=default
+
+
+15.RabbitMQ添加用户
+
+user=$1
+pwd=$2
+
+kubectl exec rabbitmq-0 -- rabbitmqctl add_user $user $pwd
+kubectl exec rabbitmq-0 -- rabbitmqctl set_user_tags $user administrator
+kubectl exec rabbitmq-0 -- rabbitmqctl set_permissions -p / $user '.*' '.*' '.*'
+
+
+16.MongoDB添加用户
+
+[root@VM_5_5_centos iot]# kubectl exec -ti mongos-rc-694995dd57-m7b9q sh
+# mongo
+
+mongos> use root
+switched to db root
+mongos> use admin
+switched to db admin
+mongos> db.auth('root','oasis-rd@h3c')
+1
+mongos> use iotgatewaymgr
+switched to db iotgatewaymgr
+mongos> db.createUser({user: 'iotgatewaymgr',pwd: 'iotgatewaymgr',roles:[{role: 'dbOwner',db: 'iotgatewaymgr'}]})
+Successfully added user: {
+	"user" : "iotgatewaymgr",
+	"roles" : [
+		{
+			"role" : "dbOwner",
+			"db" : "iotgatewaymgr"
+		}
+	]
+}
+mongos>  
+mongos> db.auth('iotgatewaymgr','iotgatewaymgr')
+1
+
+17.连接redis集群：
+
+redis-cli -h 10.0.5.10 -p 6380 -c
+
+
+18.格式化磁盘：
+
+fdisk -l
+[root@vm-10 ~]# fdisk /dev/vdb 
+WARNING: fdisk GPT support is currently new, and therefore in an experimental phase. Use at your own discretion.
+Welcome to fdisk (util-linux 2.23.2).
+
+Changes will remain in memory only, until you decide to write them.
+Be careful before using the write command.
+
+
+Command (m for help): d
+Selected partition 1
+Partition 1 is deleted
+
+Command (m for help): w
+The partition table has been altered!
+
+Calling ioctl() to re-read partition table.
+Syncing disks.
+
+lsblk

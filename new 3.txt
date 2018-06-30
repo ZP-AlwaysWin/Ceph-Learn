@@ -1,0 +1,30 @@
+ssh azure@172.20.0.48
+
+mongo 172.20.0.147  rd环境
+mongo 172.20.0.148  at环境
+
+use admin
+db.auth("root","root")
+
+show dbs
+use aaaaa
+db.auth("aaaaa","aaaaa")
+
+show collections
+db.heartrateinfos.find()
+
+
+
+
+
+rd测试环境172.20.0.62
+rd发布环境172.20.0.108
+
+at测试环境172.20.0.133
+at发布环境172.20.0.121
+
+
+我们代码的rd环境172.21.0.51
+我们代码的at环境172.21.0.59
+
+curl 172.20.0.65:8888/zzzppp/web/?username=panglidong
